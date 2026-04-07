@@ -5,6 +5,17 @@
 
 set -e
 
+# Reconnect stdin to the terminal in case this script was reached via a pipe
+# (e.g. curl ... | bash → exec install.sh). Keeps all read prompts interactive.
+if [ ! -t 0 ]; then
+    if [ -e /dev/tty ]; then
+        exec < /dev/tty
+    else
+        echo "[ERROR] No interactive terminal available. Run install.sh directly." >&2
+        exit 1
+    fi
+fi
+
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # --- Helpers ---

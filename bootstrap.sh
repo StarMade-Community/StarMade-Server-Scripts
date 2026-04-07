@@ -6,6 +6,18 @@
 
 set -e
 
+# When piped through bash (curl ... | bash), stdin is the script content rather
+# than the terminal. Reconnect stdin to the terminal so read prompts work.
+if [ ! -t 0 ]; then
+    if [ -e /dev/tty ]; then
+        exec < /dev/tty
+    else
+        echo "[ERROR] No interactive terminal available. Run this script directly instead of piping it:" >&2
+        echo "        bash <(curl -fsSL https://raw.githubusercontent.com/StarMade-Community/StarMade-Server-Scripts/main/bootstrap.sh)" >&2
+        exit 1
+    fi
+fi
+
 REPO_URL="https://github.com/StarMade-Community/StarMade-Server-Scripts.git"
 DEFAULT_INSTALL_DIR="$HOME/starmade-scripts"
 
