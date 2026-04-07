@@ -50,7 +50,7 @@ fi
 
 # --- Choose install location ---
 
-read -rp "  Where should the scripts be installed? [$DEFAULT_INSTALL_DIR]: " INSTALL_DIR
+read -rp "  Where should the scripts be installed? [$DEFAULT_INSTALL_DIR]: " INSTALL_DIR </dev/tty
 INSTALL_DIR="${INSTALL_DIR:-$DEFAULT_INSTALL_DIR}"
 
 if [ -d "$INSTALL_DIR/.git" ]; then
