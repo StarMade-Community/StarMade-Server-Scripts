@@ -143,6 +143,19 @@ YOUR_USER ALL=(ALL) NOPASSWD: /bin/systemctl start starmade, /bin/systemctl stop
 
 ## Scripts
 
+### `download.sh`
+
+Downloads the latest StarMade build and extracts it to `STARMADE_DIR`. Asks before overwriting an existing installation. Offers to start the server when done.
+
+```bash
+./download.sh          # uses UPDATE_BRANCH from .env
+./download.sh release  # force release branch
+./download.sh dev      # force dev branch
+./download.sh pre      # force pre branch
+```
+
+The installer calls this automatically if `StarMade.jar` is not found in your server directory.
+
 ### `start.sh`
 
 Starts the server in a detached tmux session.
@@ -290,6 +303,7 @@ scripts/
 ├── docker-entrypoint.sh
 ├── install.sh
 ├── bootstrap.sh
+├── download.sh
 ├── start.sh
 ├── stop.sh
 ├── backup.sh

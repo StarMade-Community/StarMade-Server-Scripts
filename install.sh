@@ -250,6 +250,15 @@ SERVER_PORT=$SERVER_PORT
 EOF
     success ".env written"
 
+    # Offer to download StarMade if it isn't already present
+    if [ ! -f "$STARMADE_DIR/StarMade.jar" ]; then
+        echo ""
+        read -rp "  StarMade.jar not found — download it now? (y/n): " DL_NOW
+        if [ "$DL_NOW" == "y" ]; then
+            "$SCRIPT_DIR/download.sh" "$UPDATE_BRANCH"
+        fi
+    fi
+
     echo ""
     read -rp "  Build and start the server now? (y/n): " START_NOW
     if [ "$START_NOW" == "y" ]; then
@@ -485,6 +494,16 @@ EOF
 sudo chmod 440 "$SUDOERS_FILE"
 success "Sudoers entry written to $SUDOERS_FILE"
 
+# --- Download StarMade if needed ---
+
+if [ ! -f "$STARMADE_DIR/StarMade.jar" ]; then
+    echo ""
+    read -rp "StarMade.jar not found — download it now? (y/n): " DL_NOW
+    if [ "$DL_NOW" == "y" ]; then
+        "$SCRIPT_DIR/download.sh" "$UPDATE_BRANCH"
+    fi
+fi
+
 # --- Done ---
 
 echo ""
@@ -497,12 +516,11 @@ echo "  Stop the server:     ./stop.sh"
 echo "  Backup:              ./backup.sh"
 echo "  Restore:             ./restore.sh"
 echo "  Update:              ./update.sh"
+echo "  Download:            ./download.sh"
 echo "  Scheduled restart:   ./scheduled-restart.sh"
 echo ""
 echo "  To set up a scheduled restart via cron:"
 echo "    crontab -e"
 echo "    # Daily restart at 5 AM:"
 echo "    0 5 * * * $SCRIPT_DIR/scheduled-restart.sh"
-echo ""
-info "If StarMade.jar is not yet in $STARMADE_DIR, place it there before starting."
 echo ""
