@@ -65,7 +65,7 @@ sleep 3
 echo "[4/6] Downloading latest $BRANCH build..."
 mkdir -p "$TEMP_DIR"
 
-LATEST=$(wget -q "$BUILD_URL/" -O - | grep -oP 'href="starmade-build_[^"]+\.zip"' | sed 's/href="//;s/"//' | sort | tail -1)
+LATEST=$(curl -fsSL "$BUILD_URL/" | grep -o 'href="starmade-build_[^"]*\.zip"' | sed 's/href="//;s/"//' | sort | tail -1)
 
 if [ -z "$LATEST" ]; then
     echo "Could not find latest build! Aborting..."
@@ -74,7 +74,7 @@ if [ -z "$LATEST" ]; then
 fi
 
 echo "Latest build: $LATEST"
-wget -q "$BUILD_URL/$LATEST" -O "$TEMP_DIR/update.zip"
+curl -fsSL "$BUILD_URL/$LATEST" -o "$TEMP_DIR/update.zip"
 
 if [ $? -ne 0 ]; then
     echo "Download failed! Restarting existing version..."
