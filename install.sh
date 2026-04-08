@@ -261,15 +261,14 @@ EOF
         fi
     fi
 
-    COMPOSE="$COMPOSE_CMD --project-directory $SCRIPT_DIR"
-
     echo ""
     read -rp "  Build and start the server now? (y/n): " START_NOW
     if [ "$START_NOW" == "y" ]; then
+        cd "$SCRIPT_DIR"
         info "Building Docker image (this may take a minute)..."
-        $COMPOSE build
+        $COMPOSE_CMD build
         info "Starting server..."
-        $COMPOSE up -d
+        $COMPOSE_CMD up -d
         success "Server started"
     fi
 
