@@ -6,6 +6,8 @@ services:
         JAVA_VERSION: ${JAVA_VERSION:-8}
     image: starmade-server
     container_name: starmade
+    tty: true
+    stdin_open: true
     ports:
       - "${SERVER_PORT:-4242}:4242/tcp"
       - "${SERVER_PORT:-4242}:4242/udp"
