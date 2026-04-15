@@ -1,13 +1,9 @@
 #!/bin/bash
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-source "$SCRIPT_DIR/.env"
+source "$SCRIPT_DIR/common.sh"
 
 DATE=$(date +%Y%m%d_%H%M%S)
 BACKUP_FILE="$BACKUP_DIR/starmade_backup_$DATE.tar.gz"
-
-send_command() {
-    tmux send-keys -t "$TMUX_SESSION" "$1" Enter
-}
 
 echo "=== StarMade Backup Script ==="
 echo "Started at: $(date)"
@@ -15,15 +11,21 @@ echo "Started at: $(date)"
 mkdir -p "$BACKUP_DIR"
 
 echo "[1/4] Warning players..."
-send_command "/start_countdown 60 Server restarting for weekly backup!"
-send_command "/server_message_broadcast warning \"Server will restart for backup in 60 seconds!\""
+send_command '/start_countdown 60 "Server restarting for weekly backup!"'
+send_command '/server_message_broadcast warning "Server will restart for backup in 60 seconds!"'
 sleep 60
 
 echo "[2/4] Stopping server..."
-send_command "/shutdown 0"
-sleep 5
-sudo systemctl stop "$SYSTEMCTL_SERVICE"
-sleep 3
+case "$SERVER_MODE" in
+    "tmux")
+        send_command "/shutdown 0"
+        sleep 5
+        sudo systemctl stop "$SYSTEMCTL_SERVICE"
+        sleep 3
+    ;;
+    "docker") docker_stop_server
+    ;;
+esac
 
 echo "[3/4] Creating backup..."
 tar --exclude="./logs" \
@@ -38,7 +40,12 @@ if [ $? -eq 0 ]; then
     echo "Backup created: $BACKUP_FILE ($SIZE)"
 else
     echo "Backup failed!"
-    sudo systemctl start "$SYSTEMCTL_SERVICE"
+    case "$SERVER_MODE" in
+        "tmux") sudo systemctl start "$SYSTEMCTL_SERVICE"
+        ;;
+        "docker") sudo docker compose --project-directory "$SCRIPT_DIR" up -d
+        ;;
+    esac
     exit 1
 fi
 
@@ -49,6 +56,11 @@ ls -t "$BACKUP_DIR"/starmade_backup_*.tar.gz 2>/dev/null | tail -n +$((MAX_BACKU
 done
 
 echo "Restarting server..."
-sudo systemctl start "$SYSTEMCTL_SERVICE"
+case "$SERVER_MODE" in
+    "tmux") sudo systemctl start "$SYSTEMCTL_SERVICE"
+    ;;
+    "docker") sudo docker compose --project-directory "$SCRIPT_DIR" up -d
+    ;;
+esac
 
 echo "=== Backup complete at: $(date) ==="

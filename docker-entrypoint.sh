@@ -7,6 +7,9 @@ if [ ! -f /starmade/StarMade.jar ]; then
     exit 1
 fi
 
+# Allow scripts to catch and stop the container before it auto-restarts
+sleep 1
+
 exec java \
     -Xms${JVM_MIN_HEAP} \
     -Xmx${JVM_MAX_HEAP} \

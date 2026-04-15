@@ -5,7 +5,7 @@ services:
       args:
         JAVA_VERSION: ${JAVA_VERSION:-8}
     image: starmade-server
-    container_name: starmade
+    container_name: ${CONTAINER_NAME:-starmade}
     tty: true
     stdin_open: true
     ports:

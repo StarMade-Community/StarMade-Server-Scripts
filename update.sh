@@ -1,15 +1,11 @@
 #!/bin/bash
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-source "$SCRIPT_DIR/.env"
+source "$SCRIPT_DIR/common.sh"
 
 EXCLUDES_FILE="$STARMADE_DIR/update-excludes.txt"
 DATE=$(date +%Y%m%d_%H%M%S)
 BRANCH=${1:-${UPDATE_BRANCH:-dev}}
 TEMP_DIR="/tmp/starmade-update"
-
-send_command() {
-    tmux send-keys -t "$TMUX_SESSION" "$1" Enter
-}
 
 if [ "$BRANCH" == "release" ]; then
     BUILD_URL="http://files-origin.star-made.org/build"
@@ -52,15 +48,21 @@ ls -t "$BACKUP_DIR"/starmade_preupdate_*.tar.gz 2>/dev/null | tail -n +$((MAX_BA
 done
 
 echo "[2/6] Warning players..."
-send_command "/start_countdown 60 Server restarting for updates!"
-send_command "/server_message_broadcast warning \"Server will restart for updates in 60 seconds!\""
+send_command '/start_countdown 60 "Server restarting for updates!"'
+send_command '/server_message_broadcast warning "Server will restart for updates in 60 seconds!"'
 sleep 60
 
 echo "[3/6] Stopping server..."
-send_command "/shutdown 0"
-sleep 5
-sudo systemctl stop "$SYSTEMCTL_SERVICE"
-sleep 3
+case "$SERVER_MODE" in
+    "tmux")
+        send_command "/shutdown 0"
+        sleep 5
+        sudo systemctl stop "$SYSTEMCTL_SERVICE"
+        sleep 3
+    ;;
+    "docker") docker_stop_server
+    ;;
+esac
 
 echo "[4/6] Downloading latest $BRANCH build..."
 mkdir -p "$TEMP_DIR"
@@ -112,7 +114,12 @@ rm -rf "$TEMP_DIR"
 echo "$BRANCH" > "$STARMADE_DIR/.current_branch"
 
 echo "[6/6] Restarting server..."
-sudo systemctl start "$SYSTEMCTL_SERVICE"
+case "$SERVER_MODE" in
+    "tmux") sudo systemctl start "$SYSTEMCTL_SERVICE"
+    ;;
+    "docker") sudo docker compose --project-directory "$SCRIPT_DIR" up -d
+    ;;
+esac
 
 echo "=== Update complete at: $(date) ==="
 echo "Now running: $BRANCH branch"

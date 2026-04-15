@@ -1,10 +1,6 @@
 #!/bin/bash
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-source "$SCRIPT_DIR/.env"
-
-send_command() {
-    tmux send-keys -t "$TMUX_SESSION" "$1" Enter
-}
+source "$SCRIPT_DIR/common.sh"
 
 echo "=== StarMade Restore Script ==="
 echo ""
@@ -20,9 +16,9 @@ backups=()
 i=1
 while IFS= read -r backup; do
     SIZE=$(du -sh "$backup" | cut -f1)
-    DATE=$(echo "$backup" | grep -oP '\d{8}_\d{6}')
-    FORMATTED_DATE=$(date -d "${DATE:0:8} ${DATE:9:2}:${DATE:11:2}:${DATE:13:2}" "+%B %d %Y at %H:%M:%S" 2>/dev/null || echo "$DATE")
-    TYPE=$(echo "$backup" | grep -oP '(preupdate|prerestore|backup)')
+    DATE=$(echo "$backup" | grep -oE '[[:digit:]]{8}_[[:digit:]]{6}')
+    FORMATTED_DATE=$(date -d "${DATE:0:4}-${DATE:4:2}-${DATE:6:2} ${DATE:9:2}:${DATE:11:2}:${DATE:13:2}" "+%B %d %Y at %H:%M:%S" 2>/dev/null || echo "$DATE")
+    TYPE=$(echo "$backup" | grep -oE '(preupdate|prerestore|backup)')
     echo "  [$i] $FORMATTED_DATE ($SIZE) - $TYPE"
     backups+=("$backup")
     ((i++))
@@ -63,15 +59,21 @@ tar --exclude="./logs" \
 echo "Snapshot saved: $SNAPSHOT_FILE"
 
 echo "[2/4] Warning players..."
-send_command "/start_countdown 60 Server restarting to restore a backup!"
-send_command "/server_message_broadcast warning \"Server will restore a backup in 60 seconds!\""
+send_command '/start_countdown 60 "Server restarting to restore a backup!"'
+send_command '/server_message_broadcast warning "Server will restore a backup in 60 seconds!"'
 sleep 60
 
 echo "[3/4] Stopping server and restoring..."
-send_command "/shutdown 0"
-sleep 5
-sudo systemctl stop "$SYSTEMCTL_SERVICE"
-sleep 3
+case "$SERVER_MODE" in
+    "tmux")
+        send_command "/shutdown 0"
+        sleep 5
+        sudo systemctl stop "$SYSTEMCTL_SERVICE"
+        sleep 3
+    ;;
+    "docker") docker_stop_server
+    ;;
+esac
 
 tar -xzf "$SELECTED" -C "$STARMADE_DIR"
 
@@ -84,6 +86,11 @@ else
 fi
 
 echo "[4/4] Restarting server..."
-sudo systemctl start "$SYSTEMCTL_SERVICE"
+case "$SERVER_MODE" in
+    "tmux") sudo systemctl start "$SYSTEMCTL_SERVICE"
+    ;;
+    "docker") sudo docker compose --project-directory "$SCRIPT_DIR" up -d
+    ;;
+esac
 
 echo "=== Restore complete at: $(date) ==="
