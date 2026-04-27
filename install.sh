@@ -230,12 +230,22 @@ if [ "$SETUP_METHOD" == "1" ]; then
     prompt SERVER_PORT    "Host port to expose"                 "4242"
     prompt CONTAINER_NAME "Name of the docker container"        "starmade"
 
-    if [ "$UPDATE_BRANCH" == "pre" ]; then
-        JAVA_VERSION=25
-        JVM_EXTRA_ARGS="--add-opens=java.base/jdk.internal.misc=ALL-UNNAMED"
-    else
-        JAVA_VERSION=8
-        JVM_EXTRA_ARGS=""
+    # Offer to download StarMade if it isn't already present
+    if [ ! -f "$STARMADE_DIR/StarMade.jar" ]; then
+        echo ""
+        read -rp "  StarMade.jar not found — download it now? (y/n): " DL_NOW
+        if [ "$DL_NOW" == "y" ]; then
+            "$SCRIPT_DIR/download.sh" "$UPDATE_BRANCH"
+        fi
+    fi
+
+    # Determine Java version from installed game version (>= 0.3xx needs Java 21)
+    JAVA_VERSION=8
+    if [ -f "$STARMADE_DIR/.game_version" ]; then
+        GAME_MINOR=$(cut -d. -f2 < "$STARMADE_DIR/.game_version")
+        if [ "${GAME_MINOR:-0}" -ge 300 ] 2>/dev/null; then
+            JAVA_VERSION=21
+        fi
     fi
 
     cat > "$SCRIPT_DIR/.env" <<EOF
@@ -246,7 +256,7 @@ SERVER_MODE=docker
 JAVA_VERSION=$JAVA_VERSION
 JVM_MIN_HEAP=$JVM_MIN_HEAP
 JVM_MAX_HEAP=$JVM_MAX_HEAP
-JVM_EXTRA_ARGS=$JVM_EXTRA_ARGS
+JVM_EXTRA_ARGS=
 STARMADE_DIR=$STARMADE_DIR
 BACKUP_DIR=$STARMADE_DIR/backups
 LOG_DIR=$STARMADE_DIR/logs
@@ -256,15 +266,6 @@ EOF
     success ".env written"
 
     chmod +x "$SCRIPT_DIR"/*.sh
-
-    # Offer to download StarMade if it isn't already present
-    if [ ! -f "$STARMADE_DIR/StarMade.jar" ]; then
-        echo ""
-        read -rp "  StarMade.jar not found — download it now? (y/n): " DL_NOW
-        if [ "$DL_NOW" == "y" ]; then
-            "$SCRIPT_DIR/download.sh" "$UPDATE_BRANCH"
-        fi
-    fi
 
     echo ""
     read -rp "  Build and start the server now? (y/n): " START_NOW
@@ -386,13 +387,23 @@ prompt UPDATE_BRANCH     "Update branch (release / dev / pre)" "release"
 prompt JVM_MIN_HEAP      "JVM minimum heap (e.g. 4g)"          "4g"
 prompt JVM_MAX_HEAP      "JVM maximum heap (e.g. 8g)"          "8g"
 
-# Determine Java requirement and extra args from branch
-if [ "$UPDATE_BRANCH" == "pre" ]; then
-    REQUIRED_JAVA=25
-    JVM_EXTRA_ARGS="--add-opens=java.base/jdk.internal.misc=ALL-UNNAMED"
-else
-    REQUIRED_JAVA=8
-    JVM_EXTRA_ARGS=""
+# Download StarMade if needed (must happen before Java version detection)
+if [ ! -f "$STARMADE_DIR/StarMade.jar" ]; then
+    echo ""
+    read -rp "StarMade.jar not found — download it now? (y/n): " DL_NOW
+    if [ "$DL_NOW" == "y" ]; then
+        "$SCRIPT_DIR/download.sh" "$UPDATE_BRANCH"
+    fi
+fi
+
+# Determine Java requirement from installed game version (>= 0.3xx needs Java 21)
+REQUIRED_JAVA=8
+JVM_EXTRA_ARGS=""
+if [ -f "$STARMADE_DIR/.game_version" ]; then
+    GAME_MINOR=$(cut -d. -f2 < "$STARMADE_DIR/.game_version")
+    if [ "${GAME_MINOR:-0}" -ge 300 ] 2>/dev/null; then
+        REQUIRED_JAVA=21
+    fi
 fi
 
 echo ""
@@ -502,16 +513,6 @@ EOF
 
 sudo chmod 440 "$SUDOERS_FILE"
 success "Sudoers entry written to $SUDOERS_FILE"
-
-# --- Download StarMade if needed ---
-
-if [ ! -f "$STARMADE_DIR/StarMade.jar" ]; then
-    echo ""
-    read -rp "StarMade.jar not found — download it now? (y/n): " DL_NOW
-    if [ "$DL_NOW" == "y" ]; then
-        "$SCRIPT_DIR/download.sh" "$UPDATE_BRANCH"
-    fi
-fi
 
 # --- Done ---
 

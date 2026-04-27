@@ -64,7 +64,7 @@ nano .env
 | `JVM_MIN_HEAP`      | Both           | Minimum JVM heap (e.g. `4g`)                                 | `4g`                     |
 | `JVM_MAX_HEAP`      | Both           | Maximum JVM heap (e.g. `8g`)                                 | `8g`                     |
 | `JVM_EXTRA_ARGS`    | Both           | Extra JVM args — required for `pre` branch                   | *(empty)*                |
-| `JAVA_VERSION`      | Docker         | Java version for the image — `8` for release/dev, `25` for pre | `8`                   |
+| `JAVA_VERSION`      | Docker         | Java version for the image — auto-detected (`8` for < 0.3, `21` for >= 0.3) | `8`                   |
 | `SERVER_PORT`       | Docker         | Host port to expose                                          | `4242`                   |
 | `TMUX_SESSION`      | Native Linux   | tmux session name                                            | `StarMade`               |
 | `BACKUP_DIR`        | Native Linux   | Where backup archives are stored                             | `$STARMADE_DIR/backups`  |
@@ -72,12 +72,12 @@ nano .env
 | `SYSTEMCTL_SERVICE` | Native Linux   | systemd service unit name                                    | `starmade`               |
 | `MAX_BACKUPS`       | Native Linux   | How many backups to keep before pruning                      | `3`                      |
 
-> **Note:** The `pre` branch requires **Java 25** and `JVM_EXTRA_ARGS=--add-opens=java.base/jdk.internal.misc=ALL-UNNAMED`. The installer sets both automatically when you select the `pre` branch.
+> **Note:** Game versions >= 0.3 require **Java 21** and additional `--add-opens` JVM flags. Both are detected and set automatically based on the installed game version.
 
 #### 3. Install Java
 
-- `release` / `dev` branches: **Java 8** or later
-- `pre` branch: **Java 25** or later
+- Game versions < 0.3: **Java 8** or later
+- Game versions >= 0.3: **Java 21** or later
 
 ```bash
 # Ubuntu/Debian — Java 8
@@ -95,7 +95,7 @@ If your distro doesn't carry the required version, install it via [SDKMAN](https
 ```bash
 curl -s "https://get.sdkman.io" | bash
 source "$HOME/.sdkman/bin/sdkman-init.sh"
-sdk install java 25-tem   # Eclipse Temurin 25
+sdk install java 21-tem   # Eclipse Temurin 21 (for game versions >= 0.3)
 ```
 
 #### 4. Create a systemd service

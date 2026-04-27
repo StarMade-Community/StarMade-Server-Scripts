@@ -69,6 +69,13 @@ rm -rf "$TEMP_DIR"
 
 echo "$BRANCH" > "$STARMADE_DIR/.current_branch"
 
+# Save game version extracted from the build filename (e.g. starmade-build_0.199.651.zip → 0.199.651)
+GAME_VERSION=$(echo "$LATEST" | sed 's/starmade-build_//;s/\.zip$//')
+if [ -n "$GAME_VERSION" ]; then
+    echo "$GAME_VERSION" > "$STARMADE_DIR/.game_version"
+    echo "  Version:      $GAME_VERSION"
+fi
+
 echo "[3/3] Done!"
 echo ""
 echo "  Server files: $STARMADE_DIR"

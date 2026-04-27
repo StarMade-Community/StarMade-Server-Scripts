@@ -49,6 +49,17 @@ send_command() {
     esac
 }
 
+# Check if game version >= 0.3xx (needs Java 21 and extra --add-opens flags)
+game_needs_java21() {
+    local version_file="$STARMADE_DIR/.game_version"
+    if [ ! -f "$version_file" ]; then
+        return 1
+    fi
+    local minor
+    minor=$(cut -d. -f2 < "$version_file")
+    [ "${minor:-0}" -ge 300 ] 2>/dev/null
+}
+
 docker_stop_server() {
     # Send the shutdown command to the server, wait for it to stop, and then stop the container before the server restarts
     sudo docker wait "$CONTAINER_NAME" &
