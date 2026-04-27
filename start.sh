@@ -8,7 +8,7 @@ case "$SERVER_MODE" in
         tmux new-session -d -s "$TMUX_SESSION" \
             "java -Xms${JVM_MIN_HEAP} -Xmx${JVM_MAX_HEAP} \
             ${JVM_EXTRA_ARGS} \
-            -jar StarMade.jar -server -autoupdatemods"
+            -javaagent:StarMade.jar -jar StarMade.jar -server -autoupdatemods"
     ;;
     "docker") sudo docker compose --project-directory "$SCRIPT_DIR" up -d
     ;;
