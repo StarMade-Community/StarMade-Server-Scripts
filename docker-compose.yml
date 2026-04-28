@@ -3,7 +3,7 @@ services:
     build:
       context: .
       args:
-        JAVA_VERSION: ${JAVA_VERSION:-8}
+        JAVA_VERSION: ${JAVA_VERSION:-21}
     image: starmade-server
     container_name: ${CONTAINER_NAME:-starmade}
     tty: true
