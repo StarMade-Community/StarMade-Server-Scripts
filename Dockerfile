@@ -1,10 +1,10 @@
-ARG JAVA_VERSION=8
+ARG JAVA_VERSION=21
 FROM eclipse-temurin:${JAVA_VERSION}-jre-jammy
 
 WORKDIR /starmade
 
 ENV JVM_MIN_HEAP=4g
-ENV JVM_MAX_HEAP=8g
+ENV JVM_MAX_HEAP=16g
 ENV JVM_EXTRA_ARGS=""
 
 COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
