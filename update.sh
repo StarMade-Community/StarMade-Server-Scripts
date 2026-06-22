@@ -23,7 +23,24 @@ fi
 
 echo "Started at: $(date)"
 
-echo "[1/6] Backing up current installation..."
+echo "[1/6] Warning players..."
+send_command '/start_countdown 60 "Server restarting for updates!"'
+send_command '/server_message_broadcast warning "Server will restart for updates in 60 seconds!"'
+sleep 60
+
+echo "[2/6] Stopping server..."
+case "$SERVER_MODE" in
+    "tmux")
+        send_command "/shutdown 0"
+        sleep 5
+        sudo systemctl stop "$SYSTEMCTL_SERVICE"
+        sleep 3
+    ;;
+    "docker") docker_stop_server
+    ;;
+esac
+
+echo "[3/6] Backing up current installation..."
 mkdir -p "$BACKUP_DIR"
 BACKUP_FILE="$BACKUP_DIR/starmade_preupdate_${BRANCH}_$DATE.tar.gz"
 
@@ -46,23 +63,6 @@ ls -t "$BACKUP_DIR"/starmade_preupdate_*.tar.gz 2>/dev/null | tail -n +$((MAX_BA
     echo "  Removing old backup: $old_backup"
     rm -f "$old_backup"
 done
-
-echo "[2/6] Warning players..."
-send_command '/start_countdown 60 "Server restarting for updates!"'
-send_command '/server_message_broadcast warning "Server will restart for updates in 60 seconds!"'
-sleep 60
-
-echo "[3/6] Stopping server..."
-case "$SERVER_MODE" in
-    "tmux")
-        send_command "/shutdown 0"
-        sleep 5
-        sudo systemctl stop "$SYSTEMCTL_SERVICE"
-        sleep 3
-    ;;
-    "docker") docker_stop_server
-    ;;
-esac
 
 echo "[4/6] Downloading latest $BRANCH build..."
 mkdir -p "$TEMP_DIR"
