@@ -1,10 +1,19 @@
 #!/bin/bash
 # Downloads a fresh StarMade server and optionally starts it.
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-source "$SCRIPT_DIR/.env"
+# Load .env if present. During first-time install it may not exist yet, in which
+# case STARMADE_DIR/UPDATE_BRANCH are expected to come from the environment.
+[ -f "$SCRIPT_DIR/.env" ] && source "$SCRIPT_DIR/.env"
 
 BRANCH=${1:-${UPDATE_BRANCH:-release}}
-TEMP_DIR="/tmp/starmade-download"
+
+if [ -z "$STARMADE_DIR" ]; then
+    echo "STARMADE_DIR is not set. Copy .env.example to .env (or run install.sh) first."
+    exit 1
+fi
+
+# Private temp dir — avoids permission clashes with a leftover shared /tmp path
+TEMP_DIR="$(mktemp -d)"
 
 if [ "$BRANCH" == "release" ]; then
     BUILD_URL="http://files-origin.star-made.org/build"
@@ -33,7 +42,6 @@ fi
 mkdir -p "$STARMADE_DIR"
 
 echo "[1/3] Downloading latest $BRANCH build..."
-mkdir -p "$TEMP_DIR"
 
 # Fetch the build index and find the latest zip (portable: no wget, no grep -P)
 LATEST=$(curl -fsSL "$BUILD_URL/" | grep -o 'href="starmade-build_[^"]*\.zip"' | sed 's/href="//;s/"//' | sort | tail -1)

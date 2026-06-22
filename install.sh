@@ -239,7 +239,8 @@ if [ "$SETUP_METHOD" == "1" ]; then
         echo ""
         read -rp "  StarMade.jar not found — download it now? (y/n): " DL_NOW
         if [ "$DL_NOW" == "y" ]; then
-            "$SCRIPT_DIR/download.sh" "$UPDATE_BRANCH"
+            # .env isn't written yet — pass config through the environment
+            STARMADE_DIR="$STARMADE_DIR" UPDATE_BRANCH="$UPDATE_BRANCH" "$SCRIPT_DIR/download.sh" "$UPDATE_BRANCH"
         fi
     fi
 
@@ -404,7 +405,8 @@ if [ ! -f "$STARMADE_DIR/StarMade.jar" ]; then
     echo ""
     read -rp "StarMade.jar not found — download it now? (y/n): " DL_NOW
     if [ "$DL_NOW" == "y" ]; then
-        "$SCRIPT_DIR/download.sh" "$UPDATE_BRANCH"
+        # .env isn't written yet — pass config through the environment
+        STARMADE_DIR="$STARMADE_DIR" UPDATE_BRANCH="$UPDATE_BRANCH" "$SCRIPT_DIR/download.sh" "$UPDATE_BRANCH"
     fi
 fi
 
