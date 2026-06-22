@@ -229,6 +229,7 @@ if [ "$SETUP_METHOD" == "1" ]; then
     prompt JVM_MAX_HEAP   "JVM maximum heap (e.g. 8g)"          "8g"
     prompt SERVER_PORT    "Host port to expose"                 "4242"
     prompt CONTAINER_NAME "Name of the docker container"        "starmade"
+    prompt MAX_BACKUPS    "Number of backups to keep"           "3"
 
     # Offer to download StarMade if it isn't already present
     if [ ! -f "$STARMADE_DIR/StarMade.jar" ]; then
@@ -262,6 +263,8 @@ BACKUP_DIR=$STARMADE_DIR/backups
 LOG_DIR=$STARMADE_DIR/logs
 SERVER_PORT=$SERVER_PORT
 CONTAINER_NAME=$CONTAINER_NAME
+UPDATE_BRANCH=$UPDATE_BRANCH
+MAX_BACKUPS=$MAX_BACKUPS
 EOF
     success ".env written"
 
@@ -448,8 +451,8 @@ cat > "$SCRIPT_DIR/.env" <<EOF
 SERVER_MODE=tmux
 STARMADE_DIR=$STARMADE_DIR
 TMUX_SESSION=$TMUX_SESSION
-BACKUP_DIR=$STARMADE_DIR/backups
-LOG_DIR=$STARMADE_DIR/logs
+BACKUP_DIR=$BACKUP_DIR
+LOG_DIR=$LOG_DIR
 SYSTEMCTL_SERVICE=$SYSTEMCTL_SERVICE
 MAX_BACKUPS=$MAX_BACKUPS
 UPDATE_BRANCH=$UPDATE_BRANCH
