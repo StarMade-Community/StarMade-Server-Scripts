@@ -9,11 +9,14 @@ services:
     tty: true
     stdin_open: true
     ports:
-      - "${SERVER_PORT:-4242}:4242/tcp"
-      - "${SERVER_PORT:-4242}:4242/udp"
+      # host port == container port so the mapping is correct in both bridge and
+      # host networking. SERVER_PORT also sets the in-container game port (below).
+      - "${SERVER_PORT:-4242}:${SERVER_PORT:-4242}/tcp"
+      - "${SERVER_PORT:-4242}:${SERVER_PORT:-4242}/udp"
     volumes:
       - ${STARMADE_DIR:-./server-data}:/starmade
     environment:
+      - SERVER_PORT=${SERVER_PORT:-4242}
       - JVM_MIN_HEAP=${JVM_MIN_HEAP:-4g}
       - JVM_MAX_HEAP=${JVM_MAX_HEAP:-8g}
       - JVM_EXTRA_ARGS=${JVM_EXTRA_ARGS:-}

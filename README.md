@@ -65,7 +65,7 @@ nano .env
 | `JVM_MAX_HEAP`      | Both           | Maximum JVM heap (e.g. `8g`)                                 | `16g`                  |
 | `JVM_EXTRA_ARGS`    | Both           | Extra JVM args — required for `pre` branch                   | *(empty)*              |
 | `JAVA_VERSION`      | Docker         | Java version for the image — auto-detected (`8` for < 0.3, `21` for >= 0.3) | `21`                   |
-| `SERVER_PORT`       | Docker         | Host port to expose                                          | `4242`                 |
+| `SERVER_PORT`       | Both           | Game port — sets host **and** in-container port; use a unique value per instance | `4242`                 |
 | `TMUX_SESSION`      | Native Linux   | tmux session name                                            | `StarMade`             |
 | `BACKUP_DIR`        | Native Linux   | Where backup archives are stored                             | `$STARMADE_DIR/backups` |
 | `LOG_DIR`           | Native Linux   | Where log files live                                         | `$STARMADE_DIR/logs`   |
@@ -291,6 +291,38 @@ docker compose up -d
 ```
 
 ---
+
+## Running multiple servers on one host
+
+This repo's `docker-compose.yml` defines a **single** service, so running two servers
+takes a little care. The pitfalls below are what make a second instance unstable.
+
+1. **Give each instance its own `.env`** with distinct values:
+   - `STARMADE_DIR` — separate server directory. Never share a world/install between
+     live servers: the world database (HSQLDB) is single-writer and will corrupt if
+     two processes open the same files.
+   - `SERVER_PORT` — a distinct port (e.g. `4242` and `4243`). This now sets both the
+     published host port **and** the in-container game port, so it behaves correctly
+     under bridge *and* host networking.
+   - `CONTAINER_NAME` — a distinct name so the management scripts target the right one.
+   - `JVM_MAX_HEAP` — size so the **sum** across all instances leaves headroom for the
+     OS. Two servers at `16g` each will starve a 16–32 GB host into constant GC/swap,
+     which stalls the server tick loop and drops client connections. On a 16 GB box,
+     try `6g` each.
+
+2. **Launch them as separate Compose projects** (distinct `-p` names). Running `up`
+   twice from the same folder makes Compose *reconcile* — it replaces the first server
+   instead of adding a second:
+
+   ```bash
+   docker compose -p sm1 --env-file .env.server1 up -d
+   docker compose -p sm2 --env-file .env.server2 up -d
+   ```
+
+3. **`network_mode: host` requires a unique `SERVER_PORT` per instance.** In host mode
+   Docker's port mapping is ignored, so instances stay separated only because each one
+   binds its own `SERVER_PORT` directly on the host. With the old hardcoded `4242` this
+   was the classic failure: the second server couldn't bind and threw connection errors.
 
 ## Directory layout
 

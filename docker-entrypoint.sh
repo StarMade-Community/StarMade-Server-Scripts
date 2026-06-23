@@ -25,5 +25,5 @@ exec java \
     ${VERSION_ARGS} ${JVM_EXTRA_ARGS} \
     -jar /starmade/StarMade.jar \
     -server \
-    -port:4242 \
+    -port:${SERVER_PORT:-4242} \
     -autoupdatemods

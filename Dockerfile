@@ -10,7 +10,8 @@ ENV JVM_EXTRA_ARGS=""
 COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
-# StarMade default game port (TCP + UDP)
+# Informational only. EXPOSE does not publish or bind ports — the actual port is
+# controlled by SERVER_PORT at runtime (see docker-compose.yml / docker-entrypoint.sh).
 EXPOSE 4242/tcp 4242/udp
 
 ENTRYPOINT ["docker-entrypoint.sh"]
