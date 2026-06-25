@@ -53,7 +53,21 @@ if [ -z "$LATEST" ]; then
 fi
 
 echo "Latest build: $LATEST"
-curl -fL --progress-bar "$BUILD_URL/$LATEST" -o "$TEMP_DIR/starmade.zip"
+if command -v aria2c >/dev/null 2>&1; then
+    # Multi-connection download — the build server caps per-connection (~9 MB/s)
+    # but not per-IP, so parallel splits are several times faster.
+    aria2c -x 8 -s 8 -k 25M \
+        --connect-timeout=30 --max-tries=3 --retry-wait=5 \
+        --console-log-level=warn --summary-interval=5 \
+        -d "$TEMP_DIR" -o starmade.zip "$BUILD_URL/$LATEST"
+else
+    echo "  (tip: install 'aria2' for much faster multi-connection downloads)"
+    curl -fL --progress-bar \
+        --connect-timeout 30 \
+        --retry 3 --retry-delay 5 \
+        --speed-time 60 --speed-limit 1024 \
+        "$BUILD_URL/$LATEST" -o "$TEMP_DIR/starmade.zip"
+fi
 
 if [ $? -ne 0 ]; then
     echo "Download failed!"
