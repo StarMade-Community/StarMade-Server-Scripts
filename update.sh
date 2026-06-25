@@ -76,7 +76,7 @@ if [ -z "$LATEST" ]; then
 fi
 
 echo "Latest build: $LATEST"
-curl -fsSL "$BUILD_URL/$LATEST" -o "$TEMP_DIR/update.zip"
+curl -fL --progress-bar "$BUILD_URL/$LATEST" -o "$TEMP_DIR/update.zip"
 
 if [ $? -ne 0 ]; then
     echo "Download failed! Restarting existing version..."
