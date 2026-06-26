@@ -40,7 +40,10 @@ send_command() {
         ;;
         "docker")
             # Send the command to a running docker container via docker attach. The script command simulates a tty.
-            sudo bash -c "echo '$1' | script -E never -qef -c 'docker attach --detach-keys=ctrl-d $CONTAINER_NAME' /dev/null"
+            # The trailing \004 (ctrl-d) is the configured detach key — without it, `docker attach`
+            # stays connected and streams the console forever, hanging the caller. The command line
+            # ("$1\n") is forwarded to the server first, then the detach byte disconnects attach.
+            sudo bash -c "printf '%s\n\004' '$1' | script -E never -qef -c 'docker attach --detach-keys=ctrl-d $CONTAINER_NAME' /dev/null"
         ;;
         *)
             echo 'Invalid SERVER_MODE, must be "docker", "tmux", or empty'
