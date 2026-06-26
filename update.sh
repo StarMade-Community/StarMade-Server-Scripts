@@ -4,7 +4,7 @@ source "$SCRIPT_DIR/common.sh"
 
 EXCLUDES_FILE="$STARMADE_DIR/update-excludes.txt"
 DATE=$(date +%Y%m%d_%H%M%S)
-BRANCH=${1:-${UPDATE_BRANCH:-dev}}
+BRANCH=${1:-${UPDATE_BRANCH:-release}}
 TEMP_DIR="$(mktemp -d)"
 
 # --- helpers for delta updates ---------------------------------------------
